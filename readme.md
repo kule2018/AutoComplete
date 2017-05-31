@@ -3,9 +3,8 @@
 ## 简介
 > AutoComplete是一个input扩展, 帮助用户自动完成输入.
 
-## todo
-6. 增加一个标志, 用户手动更改元素后, 标志=false, 从下拉项中选择, 标志=true,
-7. 在Input的 focus 事件也可以通过配置支持自动展开
+## TODO
+10. 增加选中, 等自定义class
 
 ## 特点
 1. `dataSouce` 可以是异步函数
@@ -14,11 +13,10 @@
 4. 选中了某项后,给绑定的input元素触发一个自定义事件接收
 5. 显示/关闭下拉列表后也发送一个事件
 6. 增加一个标志, 用户手动更改元素后, 标志=false, 从下拉项中选择, 标志=true,
-7. 在Input的 focus 事件也可以通过配置支持自动展开
-8. 默认都是去除前后空格, 可以配置
-9. 上下方向键控制的时候, 主动设置对应item为激活class, 还有回车键都使用阻止冒泡, 防止提交表单
-10. 增加动画
-11. 增加选中, 等自定义class
+7. 默认都是去除前后空格, 可以配置
+8. 上下方向键控制的时候, 主动设置对应item为激活class, 还有回车键都使用阻止冒泡, 防止提交表单
+9. 增加动画
+
 
 ## 配置
 **dataSource**
@@ -57,6 +55,10 @@ var data = [
     filter: null,
     // 是否清除前后空格
     istrim: true,
+    // 是否空白匹配所有
+    allowEmpy: true,
+    // 是否忽略大小写
+    ignoreCase: true,
     // item选项模板
     tmp: '<li value="{{value}}">{{label}}</li>' 
 }
@@ -73,22 +75,15 @@ autocomplete.hide();
 autocomplete.destroy();
 // 主动搜索, 比如右侧一个搜索按钮,点击时候主动查询, value参数为空则使用input中的值
 autocomplete.search(value);
+
+// 事件
+$('#input').on(AutoComplete.Event.select, function(event, data) {
+    console.log('选中数据: ', data);
+});
+$('#input').on(AutoComplete.Event.show, function(event, data) {
+    console.log('打开');
+});
+$('#input').on(AutoComplete.Event.hide, function(event, data) {
+    console.log('隐藏: ', data);
+});
 ```
-
-
-## 重构
-1. 数据反映视图, 改变数据只能从此接口改变
-2. 视图控制独立
-3. 将show, hide, select这些状态值隐射ref的属性中. 比如选中 武汉银行, `<input data-select="武汉银行">`, 验证时候就可以简单对比 input.value 是否等于 input.attr('data-select')
-
-
-
-http-server -c-1
-
-
-
-
-## 模拟异步
-1. 输入 `a` 开始ajax获取数据, 此ajax设置`3秒`返回结果
-2. 输入 `aa` 开始ajax获取数据, 此ajax设置`2秒`返回结果
-3. 输入 `aaa` 开始ajax获取数据, 此ajax设置`0.5秒`返回结果
