@@ -304,15 +304,18 @@
     var availableHeight = ($(window).height() + $(window).scrollTop()) - (ref.offset().top + ref.outerHeight());
     var pos = utils.offset(ref);
     element.css({
+      display: 'block',
       position: 'absolute',
       top: pos.top,
       left: pos.left,
       'max-height': availableHeight,
-      'width': ref.outerWidth()
+      'width': ref.outerWidth(),
+      'overflow-y': 'auto',
+      'overflow-x': 'hidden'
     });
 
     if (isReplace) {
-      this.element.replaceWith(element.show(0));
+      this.element.replaceWith(element);
     } else {
       $(document.body).append(element);
     }
@@ -334,12 +337,7 @@
     var data = autocomplete.element.data('data');
     var li = $('ul', autocomplete.element).children();
     
-
-    
-
-
     function jump(i) {
-
       // 检测越界
       if (i < 0 || i >= data.length)
         return;
@@ -351,18 +349,18 @@
       event.stopPropagation();
     }
 
-    var key = event.key;
+    var key = event.keyCode;
     switch (key) {
-      case 'ArrowUp':
+      case 38:
         jump(index - 1);
       break;
-      case 'ArrowDown':
+      case 40:
         jump(index + 1);
       break;
-      case 'Enter':
+      case 13:
         autocomplete.select(index);
         event.stopPropagation();
-      break;
+        return false;
       default:
         break;
     }
