@@ -80,10 +80,10 @@ autocomplete.search(value);
 $('#input').on(AutoComplete.Event.select, function(event, data) {
     console.log('选中数据: ', data);
 });
-$('#input').on(AutoComplete.Event.show, function(event, data) {
+$('#input').on(AutoComplete.Event.show, function(event, autoComplete) {
     console.log('打开');
 });
-$('#input').on(AutoComplete.Event.hide, function(event, data) {
-    console.log('隐藏: ', data);
+$('#input').on(AutoComplete.Event.hide, function(event, autoComplete) {
+    console.log('隐藏: ');
 });
 ```

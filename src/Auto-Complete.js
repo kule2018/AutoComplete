@@ -101,6 +101,10 @@
       disabled: false,
       // 最小长度, 比如匹配银行卡号, 输入11位数时才进行请求
       minLength: 0,
+      // 列表最大显示行
+      maxListCount: 6,
+      // 是否不计算剩余高度
+      notAvailable: false,
       // 过滤函数, 内置无过滤, 模糊匹配, 全字匹配, 默认的过滤器都支持是否大小写参数
       filter: filter.somevalue,
       // 是否清除前后空格
@@ -110,8 +114,10 @@
       // 是否空白匹配所有
       allowEmpy: false,
       // item选项模板
-      tmp: '<li index="{{index}}" title="{{label}}" value="{{value}}">{{label}}</li>' 
+      tmp: '<li index="{{index}}" title="{{label}}" value="{{value}}">{{label}}</li>'
     };
+    if (!input)
+      return;
     // 扩展参数
     this.options = $.extend({}, options, opt);
     this.ref = input;
@@ -126,6 +132,8 @@
 
   AutoComplete.prototype.init = function() {
     var ref = this.ref;
+    if (!ref || !ref[0])
+  		return;
     if (ref[0].autoComplete)
       ref[0].autoComplete.destroy();
     // 禁用原生自动填充
@@ -147,10 +155,10 @@
     if (this.ishow || !element)
       return;
 
-    this.ref.trigger(AutoComplete.Event.show, self);
     this.ref.attr('data-visibility', 'show');
     element.show(0);
     this.ishow = true;
+    this.ref.trigger(AutoComplete.Event.show, this);
   };
   AutoComplete.prototype.hide = function(trigger) {
     var element = this.element;
@@ -159,12 +167,11 @@
     if (element)
       element.remove();
 
-    if (!trigger)
-      this.ref.trigger(AutoComplete.Event.hide, self);
-
     this.ref.attr('data-visibility', 'hide');
     this.element = null;
     this.ishow = false;
+    if (!trigger)
+      this.ref.trigger(AutoComplete.Event.hide, this);
   };
   AutoComplete.prototype.bind = function() {
     var ref = this.ref;
@@ -251,7 +258,7 @@
     var current = data[index];
     // 将值填入
     ref.val(current.label);
-    autocomplete.ref.attr('data-select', current.label);
+    ref.attr('data-select', current.label);
     // 发射事件
     ref.trigger(AutoComplete.Event.select, current, self);
     this.hide(true);
@@ -262,8 +269,6 @@
   AutoComplete.prototype.createList = function(data) {
     if (data.length <= 0)
       return;
-
-    
     var self = this;
     var options = this.options;
     var ref = this.ref;
@@ -271,6 +276,7 @@
     var ul = $('<ul></ul>');
     var lis = $();
     self.data = data;
+    self.ref.trigger(AutoComplete.Event.beginShow, self);
 
     for (var i = 0; i < data.length; ++i) {
       var item = data[i];
@@ -285,7 +291,7 @@
 
     // 插入或替换下拉列表
     if (options.appendTo === null) {
-      self.append(element, ref, self.ishow);
+      self.append(element, ref, self.ishow, data);
     } else {
       if (self.ishow) {
         options.appendTo.replaceWith(element);
@@ -299,26 +305,40 @@
     this.element = element;
   };
   // 默认插入下拉列表
-  AutoComplete.prototype.append = function(element, ref, isReplace) {
+  AutoComplete.prototype.append = function(element, ref, isReplace, data) {
     // 计算剩余高度
-    var availableHeight = ($(window).height() + $(window).scrollTop()) - (ref.offset().top + ref.outerHeight());
+
+    // notAvailable
+    var availableHeight = ($(window).height()  + $(window).scrollTop()) - (ref.offset().top + ref.outerHeight());
     var pos = utils.offset(ref);
+    var maxListCount = Math.min(this.options.maxListCount, data.length);
+    // 先插入到文档中, 以便获取单条项的高度
+    $(document.body).append(element.show());
+    var itemHeight = $('li', element).eq(0).outerHeight();
     element.css({
       display: 'block',
       position: 'absolute',
       top: pos.top,
       left: pos.left,
-      'max-height': availableHeight,
+      height: maxListCount * itemHeight,
+      'max-height': this.options.notAvailable ? maxListCount * itemHeight : availableHeight,
       'width': ref.outerWidth(),
+      'overflow': 'auto',
       'overflow-y': 'auto',
       'overflow-x': 'hidden'
     });
-
     if (isReplace) {
       this.element.replaceWith(element);
     } else {
       $(document.body).append(element);
     }
+    setTimeout(function() {
+      element.css({
+        'overflow': 'auto',
+        'overflow-y': 'auto',
+        'overflow-x': 'hidden'
+      });
+    }, 10);
   };
   // 事件控制-input
   AutoComplete.prototype.hander_input = function(event) {
@@ -372,7 +392,8 @@
   AutoComplete.Event = {
     'select': 'SELECT',
     'show': 'SHOW',
-    'hide': 'HIDE'
+    'hide': 'HIDE',
+    'beginShow': 'BeginShow'
   };
   AutoComplete.add = function(autocomplete) {
     AutoComplete.autocompletes.push(autocomplete);
